@@ -11,12 +11,10 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     # Checkout code from GitHub
-    - task: Checkout@2
-      inputs:
-        repository: GitHub connection 1 # Replace with your GitHub service connection name
+    - checkout: self
 
     # Set up JDK
-    - task: UseJavaVersion@1
+    - task: javaToolInstaller@0
       inputs:
         versionSpec: '11' # Use Java version required by your project
         jdkArchitecture: 'x64'
@@ -51,9 +49,7 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     # Checkout the Kubernetes manifest from GitHub
-    - task: Checkout@2
-      inputs:
-        repository: self # Assumes manifest is in the same repo as your application code
+    - checkout: self
 
     # Deploy the Kubernetes manifest using the Kubernetes@1 task
     - task: Kubernetes@1
