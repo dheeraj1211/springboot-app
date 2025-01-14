@@ -1,47 +1,66 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
-trigger:
-- main
-
-resources:
-- repo: self
-
-variables:
-  tag: '$(Build.BuildId)'
+trigger: 
+- main # Replace with your branch name
 
 stages:
 - stage: Build
-  displayName: Build image
+  displayName: "Build Java Application and Push Docker Image"
   jobs:
-  - job: Build
-    displayName: Build
+  - job: BuildAndPush
+    displayName: "Build and Push Docker Image"
     pool:
-      vmImage: ubuntu-latest
+      vmImage: 'ubuntu-latest'
     steps:
-    - task: Maven@4
+    # Checkout code from GitHub
+    - task: Checkout@2
       inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'install'
-        publishJUnitResults: true
-        testResultsFiles: '**/surefire-reports/TEST-*.xml'
-        javaHomeOption: 'JDKVersion'
-        mavenVersionOption: 'Default'
-        mavenAuthenticateFeed: false
-        effectivePomSkip: false
-        sonarQubeRunAnalysis: false
-    - task: Docker@2
-      displayName: Build an image
+        repository: GitHub connection 1 # Replace with your GitHub service connection name
+
+    # Set up JDK
+    - task: UseJavaVersion@1
       inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        repository: $(imageName)
-        tags: |
-          $(tag)
-    - task: ArtifactoryDocker@1
+        versionSpec: '11' # Use Java version required by your project
+        jdkArchitecture: 'x64'
+
+    # Build the Java application with Maven or Gradle
+    - script: |
+        mvn clean package -DskipTests # Replace with Gradle commands if needed
+      displayName: "Build Java Application with Maven"
+
+    # Login to Azure Container Registry (ACR)
+    - task: AzureCLI@2
       inputs:
-        command: 'push'
-        artifactoryService: 'Art_SVC_conn'
-        targetRepo: 'docker-local'
-        imageName: '$(imageName):$(tag)'
+        azureSubscription: 'Free Trial (69f118c4-52aa-40f9-ade4-15531d9f5ff3)'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az acr login --name myacr212
+
+    # Build and push the Docker image
+    - script: |
+        docker build -t myacr212.azurecr.io/$(Build.Repository.Name)$(Build.BuildId) .
+        docker push myacr212.azurecr.io/$(Build.Repository.Name):$(Build.BuildId)
+      displayName: "Build and Push Docker Image"
+
+- stage: Deploy
+  displayName: "Deploy to AKS"
+  dependsOn: Build
+  jobs:
+  - job: DeployToAKS
+    displayName: "Deploy to AKS"
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    # Checkout the Kubernetes manifest from GitHub
+    - task: Checkout@2
+      inputs:
+        repository: self # Assumes manifest is in the same repo as your application code
+
+    # Deploy the Kubernetes manifest using the Kubernetes@1 task
+    - task: Kubernetes@1
+      inputs:
+        kubernetesServiceConnection: 'my-aks-connection' # Replace with your AKS service connection
+        namespace: 'default' # Replace with your Kubernetes namespace
+        command: apply
+        useConfigurationFile: true
+        configuration: $(System.DefaultWorkingDirectory)/aks-deploy-from-acr.yaml # Path to your manifest file
+      displayName: "Deploy Kubernetes Resources"
