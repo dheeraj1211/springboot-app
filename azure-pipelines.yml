@@ -36,7 +36,7 @@ stages:
 
     # Build and push the Docker image
     - script: |
-        docker build -t myacr212.azurecr.io/$(Build.Repository.Name)$(Build.BuildId) .
+        docker build -t myacr212.azurecr.io/$(Build.Repository.Name):$(Build.BuildId) .
         docker push myacr212.azurecr.io/$(Build.Repository.Name):$(Build.BuildId)
       displayName: "Build and Push Docker Image"
 
