@@ -55,6 +55,9 @@ stages:
     # Deploy the Kubernetes manifest using the Kubernetes@1 task
     - task: Kubernetes@1
       inputs:
+        connectionType: Azure Resource Manager
+        azureSubscriptionEndpoint: 'Free Trial (69f118c4-52aa-40f9-ade4-15531d9f5ff3)'
+        azureResourceGroup: 'myresourcegroup'
         kubernetesCluster: 'spring-cluster' # Replace with your AKS service connection
         namespace: 'default' # Replace with your Kubernetes namespace
         command: apply
