@@ -14,10 +14,11 @@ stages:
     - checkout: self
 
     # Set up JDK
-    - task: javaToolInstaller@0
+    - task: JavaToolInstaller@0
       inputs:
         versionSpec: '11' # Use Java version required by your project
-        jdkArchitecture: 'x64'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: PreInstalled
 
     # Build the Java application with Maven or Gradle
     - script: |
@@ -54,7 +55,7 @@ stages:
     # Deploy the Kubernetes manifest using the Kubernetes@1 task
     - task: Kubernetes@1
       inputs:
-        kubernetesServiceConnection: 'my-aks-connection' # Replace with your AKS service connection
+        kubernetesCluster: 'spring-cluster' # Replace with your AKS service connection
         namespace: 'default' # Replace with your Kubernetes namespace
         command: apply
         useConfigurationFile: true
