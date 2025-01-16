@@ -1,6 +1,9 @@
 trigger: 
 - main
 
+variables:
+  tag: '$(Build.BuildId)'
+
 stages:
 - stage: Build
   displayName: "Build Java Application and Push Docker Image"
