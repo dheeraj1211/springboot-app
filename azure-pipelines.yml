@@ -61,7 +61,7 @@ stages:
       inputs:
        targetType: 'inline'
        script:  |
-        sed "s/Image_Tag/$(Build.BuildId)|g" $(System.DefaultWorkingDirectory)/aks-deploy-from-acr.yaml
+        sed "s|Image_Tag|$(Build.BuildId)|g" $(System.DefaultWorkingDirectory)/aks-deploy-from-acr.yaml
 
     - task: Kubernetes@1
       inputs:
